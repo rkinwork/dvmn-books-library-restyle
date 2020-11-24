@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 from typing import NamedTuple, Tuple
 from urllib.parse import urljoin
+from itertools import chain
 
 import requests
 from bs4 import BeautifulSoup
@@ -22,6 +23,7 @@ class BookMetadata(NamedTuple):
     title: str = None
     img_url: str = None
     comments: Tuple[str, ...] = tuple()
+    genres: Tuple[str, ...] = tuple()
 
 
 def extract_file_name(content_disposition: str) -> [str]:
@@ -65,6 +67,13 @@ def extract_comments(soup: BeautifulSoup) -> Tuple[str, ...]:
     return tuple([''.join(block_text) for block_text in blocks_with_text])
 
 
+def extract_genres(soup: BeautifulSoup) -> Tuple[str, ...]:
+    span_d_book = soup.find_all('span', class_='d_book')
+    a_genres = chain.from_iterable(
+        span_book_group.find_all('a', href=lambda x: x.startswith('/l')) for span_book_group in span_d_book)
+    return tuple([a_genre.string for a_genre in a_genres])
+
+
 def get_book_metadata(book_id: int) -> BookMetadata:
     with requests.get(PARSE_BOOK_METADATA_URL_TEMPL.format(book_id), verify=False) as r:
         if r.status_code != MEDIA_EXISTS_STATUS_CODE:
@@ -83,9 +92,14 @@ def get_book_metadata(book_id: int) -> BookMetadata:
         img_url = urljoin(SITE_HOST, image_tag['src'])
 
     comments = extract_comments(soup)
+    genres = extract_genres(soup)
 
     author, title = [el.strip() for el in author_and_title.split(AUTHOR_BOOK_NAME_SEPARATOR)]
-    return BookMetadata(author=author, title=title, img_url=img_url, comments=comments)
+    return BookMetadata(author=author,
+                        title=title,
+                        img_url=img_url,
+                        comments=comments,
+                        genres=genres)
 
 
 def download_txt(url, file_name, folder='books/') -> [str]:
