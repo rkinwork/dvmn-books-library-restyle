@@ -9,13 +9,14 @@ from pathvalidate import sanitize_filename
 
 SITE_HOST = 'https://tululu.org/'
 DOWNLOAD_BOOK_URL_TEMPL = urljoin(SITE_HOST, 'txt.php?id={}')
-PARSE_BOOK_METADATA_URL_TEMPL = urljoin(SITE_HOST, 'b{}/')
-BOOKS_ROOT = Path('./books')
+BOOKS_ROOT_NAME = 'books'
+IMAGES_ROOT_NAME = 'images'
 MEDIA_EXISTS_STATUS_CODE = 200
 FILENAME_PATTERN = re.compile(r'filename="(.+)"')
 BOOK_ID_PATTERN = re.compile(urljoin(SITE_HOST, r'b(\d+)'))
 BOOK_NAME_TEMPL = '{book_id}. {book_name}.txt'
 AUTHOR_BOOK_NAME_SEPARATOR = ' - '
+SKIPPED_DOWNLOAD_PLACEHOLDER = 'download was skipped'
 
 
 class BookMetadata(NamedTuple):
@@ -34,35 +35,33 @@ def extract_file_name(content_disposition: str) -> [str]:
         return match.group(1)
 
 
-def download_book(book_url):
-    with requests.get(book_url, stream=True, verify=False) as r:
-        if r.status_code != MEDIA_EXISTS_STATUS_CODE:
-            return
-        file_name = extract_file_name(r.headers.get('Content-Disposition'))
-        if file_name is None:
-            return
-        with BOOKS_ROOT.joinpath(file_name).open('wb') as f:
-            for chunk in r.iter_content(chunk_size=1024):
-                f.write(chunk)
-
-
-def get_book_by_url(book_url) -> [dict]:
+def get_book_by_url(book_url: str,
+                    is_image_download: bool,
+                    is_boot_txt_download: bool,
+                    download_root: Path
+                    ) -> [dict]:
     book_metadata = get_book_metadata(book_url)
     if book_metadata.title is None:
         return None
     book_id = BOOK_ID_PATTERN.search(book_url).group(1)
-    book_path = download_txt(url=DOWNLOAD_BOOK_URL_TEMPL.format(book_id),
-                             file_name=BOOK_NAME_TEMPL.format(book_id=book_id,
-                                                              book_name=book_metadata.title),
-                             folder=BOOKS_ROOT)
-    if book_path is None:
-        return None
+
+    if is_boot_txt_download:
+        book_path = download_txt(url=DOWNLOAD_BOOK_URL_TEMPL.format(book_id),
+                                 file_name=BOOK_NAME_TEMPL.format(book_id=book_id,
+                                                                  book_name=book_metadata.title),
+                                 folder=download_root.as_posix())
+        if book_path is None:
+            return None
+    else:
+        book_path = SKIPPED_DOWNLOAD_PLACEHOLDER
+
+    image_src = download_image(url=book_metadata.img_url) if is_image_download else SKIPPED_DOWNLOAD_PLACEHOLDER
 
     return {'author': book_metadata.author,
             'title': book_metadata.title,
             'comments': book_metadata.comments,
             'genres': book_metadata.genres,
-            'img_src': download_image(url=book_metadata.img_url),
+            'img_src': image_src,
             'book_path': book_path}
 
 
@@ -103,7 +102,7 @@ def get_book_metadata(book_url: str) -> BookMetadata:
                         genres=genres)
 
 
-def download_txt(url: str, file_name: str, folder: str = 'books/') -> [str]:
+def download_txt(url: str, file_name: str, folder: str = '.') -> [str]:
     """Функция для скачивания текстовых файлов.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
@@ -119,7 +118,7 @@ def download_txt(url: str, file_name: str, folder: str = 'books/') -> [str]:
         if r.history:
             return None
 
-        books_folder = Path(folder)
+        books_folder = Path(folder) / BOOKS_ROOT_NAME
         books_folder.mkdir(parents=True, exist_ok=True)
         txt_file = books_folder.joinpath(sanitize_filename(file_name))
         with txt_file.open('wb') as f:
@@ -129,7 +128,7 @@ def download_txt(url: str, file_name: str, folder: str = 'books/') -> [str]:
         return txt_file.as_posix()
 
 
-def download_image(url, folder='images/') -> [str]:
+def download_image(url: str, folder: str = '.') -> [str]:
     """Функция для скачивания картинок.
         Args:
             url (str): Cсылка на картинку, которую хочется скачать.
@@ -144,7 +143,7 @@ def download_image(url, folder='images/') -> [str]:
         if r.history:
             return None
 
-        image_folder = Path(folder)
+        image_folder = Path(folder) / IMAGES_ROOT_NAME
         image_folder.mkdir(parents=True, exist_ok=True)
         image_file = image_folder.joinpath(sanitize_filename(url.split('/')[-1]))
         with image_file.open('wb') as f:
