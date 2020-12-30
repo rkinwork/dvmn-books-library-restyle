@@ -27,6 +27,10 @@ class BookMetadata(NamedTuple):
     genres: Tuple[str, ...] = ()
 
 
+class TululuException(Exception):
+    pass
+
+
 def extract_file_name(content_disposition: str) -> [str]:
     if content_disposition is None:
         return None

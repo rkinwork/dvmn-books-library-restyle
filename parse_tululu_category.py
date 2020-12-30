@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from tululu_lib import SITE_HOST, MEDIA_EXISTS_STATUS_CODE, get_book_by_url
+from tululu_lib import SITE_HOST, MEDIA_EXISTS_STATUS_CODE, get_book_by_url, TululuException
 
 FANTASTIC_CATEGORY_URL = urljoin(SITE_HOST, '/{category}')
 FANTASTIC_CATEGORY_CODE = 'l55/'
@@ -23,31 +23,20 @@ def extract_fantastic_book_link(source_url: str, table_book: Tag) -> [str]:
     return urljoin(source_url, a_tag['href'])
 
 
-def process_category_page(category_code: str, page: str = '1'):
-    category_url = FANTASTIC_CATEGORY_URL.format(category=category_code)
-    url_to_process = urljoin(category_url, page)
-    with requests.get(url_to_process, verify=False) as req:
-        if req.status_code != MEDIA_EXISTS_STATUS_CODE:
-            return None
-        response_text = req.text
-    soup = BeautifulSoup(response_text, 'lxml')
-    table_books = soup.select('table.d_book')
-    for table_book in table_books:
-        book_link = extract_fantastic_book_link(url_to_process, table_book)
-        if book_link:
-            yield extract_fantastic_book_link(url_to_process, table_book)
-
-
 def extract_href_from_category(
         category_code: str,
         start_page: int = 1,
         end_page: int = MAX_PAGES_TO_PROCESS_IN_CATEGORY,
 ):
     for page in range(start_page, end_page):
-        yield from process_category_page(
-            category_code=category_code,
-            page=str(page),
-        )
+        category_url = FANTASTIC_CATEGORY_URL.format(category=category_code)
+        url_to_process = urljoin(category_url, str(page))
+        with requests.get(url_to_process, verify=False) as req:
+            if req.status_code != MEDIA_EXISTS_STATUS_CODE:
+                continue
+            response_text = req.text
+        table_books = BeautifulSoup(response_text, 'lxml').select('table.d_book')
+        return (extract_fantastic_book_link(url_to_process, table_book) for table_book in table_books)
 
 
 def main():
@@ -96,6 +85,8 @@ def main():
         start_page=args.start_page,
         end_page=args.end_page,
     )
+    if books_urls is None:
+        raise TululuException(f"There are no books in category {FANTASTIC_CATEGORY_CODE}. It's abnormal")
     for book_url in books_urls:
         data_to_save.append(get_book_by_url(
             book_url,
