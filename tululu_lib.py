@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 from typing import NamedTuple, Tuple, Optional
 from urllib.parse import urljoin
+import logging
 
 import requests
 from bs4 import BeautifulSoup
@@ -31,6 +32,10 @@ class TululuException(Exception):
     pass
 
 
+class TululuRequiredTagAbsenceException(Exception):
+    pass
+
+
 def extract_file_name(content_disposition: str) -> [str]:
     if content_disposition is None:
         return None
@@ -44,10 +49,12 @@ def get_book_by_url(book_url: str,
                     is_boot_txt_download: bool,
                     download_root: Path,
                     ) -> [dict]:
-
-    book_metadata = get_book_metadata(book_url)
-    if book_metadata is None:
-        return None
+    try:
+        book_metadata = get_book_metadata(book_url)
+    except requests.HTTPError:
+        raise TululuException(f"There is no page {book_url}")
+    except TululuRequiredTagAbsenceException as e:
+        raise TululuException(f"There is no required information: {e}")
 
     book_id = BOOK_ID_PATTERN.search(book_url).group(1)
     book_path = SKIPPED_DOWNLOAD_PLACEHOLDER
@@ -62,7 +69,7 @@ def get_book_by_url(book_url: str,
             folder=download_root.as_posix(),
         )
         if book_path is None:
-            return None
+            raise TululuException(f"There is no book required book path to download in {book_url}")
 
     image_src = SKIPPED_DOWNLOAD_PLACEHOLDER
     if is_image_download:
@@ -102,13 +109,12 @@ def get_book_metadata(book_url: str) -> Optional[BookMetadata]:
 
     """
     with requests.get(book_url, verify=False) as req:
-        if req.status_code != MEDIA_EXISTS_STATUS_CODE:
-            return None
+        req.raise_for_status()
         response_text = req.text
     soup = BeautifulSoup(response_text, 'lxml')
     book_image_tag = soup.select_one('.bookimage a')
     if not book_image_tag or not book_image_tag['title']:
-        return None
+        raise TululuRequiredTagAbsenceException(f"There is no tag with book name. {book_url}")
     author_and_title = book_image_tag['title']
     image_tag = book_image_tag.select_one('img')
     if not image_tag or not image_tag['src']:

@@ -2,6 +2,8 @@ import argparse
 import json
 import pathlib
 from urllib.parse import urljoin
+import sys
+import logging
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -33,10 +35,11 @@ def extract_href_from_category(
         url_to_process = urljoin(category_url, str(page))
         with requests.get(url_to_process, verify=False) as req:
             if req.status_code != MEDIA_EXISTS_STATUS_CODE:
+                logging.error(f"There are problems with url {url_to_process}")
                 continue
             response_text = req.text
         table_books = BeautifulSoup(response_text, 'lxml').select('table.d_book')
-        return (extract_fantastic_book_link(url_to_process, table_book) for table_book in table_books)
+        yield from (extract_fantastic_book_link(url_to_process, table_book) for table_book in table_books)
 
 
 def main():
@@ -79,27 +82,30 @@ def main():
     )
 
     args = parser.parse_args()
-    data_to_save = []
+    books_properties_to_save = []
     books_urls = extract_href_from_category(
         category_code=FANTASTIC_CATEGORY_CODE,
         start_page=args.start_page,
         end_page=args.end_page,
     )
     if books_urls is None:
-        raise TululuException(f"There are no books in category {FANTASTIC_CATEGORY_CODE}. It's abnormal")
+        logging.error(f"There are no books in category {FANTASTIC_CATEGORY_CODE}. It's abnormal")
     for book_url in books_urls:
-        data_to_save.append(get_book_by_url(
-            book_url,
-            is_boot_txt_download=not args.skip_txt,
-            is_image_download=not args.skip_imgs,
-            download_root=args.dest_folder,
-        ),
-        )
-    data_to_save = filter(None, data_to_save)
+        try:
+            book_properties = get_book_by_url(
+                book_url,
+                is_boot_txt_download=not args.skip_txt,
+                is_image_download=not args.skip_imgs,
+                download_root=args.dest_folder,
+            )
+        except TululuException as e:
+            logging.error(e)
+            continue
+        books_properties_to_save.append(book_properties)
 
     book_lib_json_path = args.json_path
     with book_lib_json_path.open(mode='w', encoding='utf-8') as f:
-        json.dump(list(data_to_save), f, ensure_ascii=False, indent=2)
+        json.dump(list(books_properties_to_save), f, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
