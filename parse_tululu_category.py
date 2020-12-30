@@ -14,13 +14,13 @@ MAX_PAGES_TO_PROCESS_IN_CATEGORY = 701
 DEFAULT_JSON_FILE_NAME = 'fantastic_lib.json'
 
 
-def extract_fantastic_book_link(table_book: Tag) -> [str]:
+def extract_fantastic_book_link(source_url: str, table_book: Tag) -> [str]:
     try:
         a_tag = table_book.select_one('.bookimage a')
     except AttributeError:
         return None
 
-    return urljoin(SITE_HOST, a_tag['href'])
+    return urljoin(source_url, a_tag['href'])
 
 
 def process_category_page(category_code: str, page: str = '1'):
@@ -33,9 +33,9 @@ def process_category_page(category_code: str, page: str = '1'):
     soup = BeautifulSoup(response_text, 'lxml')
     table_books = soup.select('table.d_book')
     for table_book in table_books:
-        book_link = extract_fantastic_book_link(table_book)
+        book_link = extract_fantastic_book_link(url_to_process, table_book)
         if book_link:
-            yield extract_fantastic_book_link(table_book)
+            yield extract_fantastic_book_link(url_to_process, table_book)
 
 
 def extract_href_from_category(

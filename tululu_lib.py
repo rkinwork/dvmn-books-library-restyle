@@ -108,7 +108,7 @@ def get_book_metadata(book_url: str) -> BookMetadata:
     if not image_tag or not image_tag['src']:
         img_url = None
     else:
-        img_url = urljoin(SITE_HOST, image_tag['src'])
+        img_url = urljoin(book_url, image_tag['src'])
 
     comments = extract_comments(soup)
     genres = extract_genres(soup)
