@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import NamedTuple, Tuple
+from typing import NamedTuple, Tuple, Optional
 from urllib.parse import urljoin
 
 import requests
@@ -44,12 +44,14 @@ def get_book_by_url(book_url: str,
                     is_boot_txt_download: bool,
                     download_root: Path,
                     ) -> [dict]:
-    book_metadata = get_book_metadata(book_url)
-    if book_metadata.title is None:
-        return None
-    book_id = BOOK_ID_PATTERN.search(book_url).group(1)
 
+    book_metadata = get_book_metadata(book_url)
+    if book_metadata is None:
+        return None
+
+    book_id = BOOK_ID_PATTERN.search(book_url).group(1)
     book_path = SKIPPED_DOWNLOAD_PLACEHOLDER
+
     if is_boot_txt_download:
         book_path = download_txt(
             url=DOWNLOAD_BOOK_URL_TEMPL.format(book_id),
@@ -90,23 +92,23 @@ def extract_genres(soup: BeautifulSoup) -> Tuple[str, ...]:
     return tuple(a_genre.string for a_genre in a_genres)
 
 
-def get_book_metadata(book_url: str) -> BookMetadata:
+def get_book_metadata(book_url: str) -> Optional[BookMetadata]:
     """Функция генерации выгрузки информации о книге.
 
     Args:
         book_url (str): Ссылка на книгу, которую хочется скачать.
     Returns:
-        BookMetadata: Кортеж с информацией о книге.
+        Optional[BookMetadata]: Кортеж с информацией о книге.
 
     """
     with requests.get(book_url, verify=False) as req:
         if req.status_code != MEDIA_EXISTS_STATUS_CODE:
-            return BookMetadata()
+            return None
         response_text = req.text
     soup = BeautifulSoup(response_text, 'lxml')
     book_image_tag = soup.select_one('.bookimage a')
     if not book_image_tag or not book_image_tag['title']:
-        return BookMetadata()
+        return None
     author_and_title = book_image_tag['title']
     image_tag = book_image_tag.select_one('img')
     if not image_tag or not image_tag['src']:
