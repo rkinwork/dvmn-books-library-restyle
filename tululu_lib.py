@@ -91,10 +91,10 @@ def extract_genres(soup: BeautifulSoup) -> Tuple[str, ...]:
 
 
 def get_book_metadata(book_url: str) -> BookMetadata:
-    """Функция генерации выгрузки ифнформации о книге.
+    """Функция генерации выгрузки информации о книге.
 
     Args:
-        book_url (str): Cсылка на книгу, которую хочется скачать.
+        book_url (str): Ссылка на книгу, которую хочется скачать.
     Returns:
         BookMetadata: Кортеж с информацией о книге.
 
@@ -133,7 +133,7 @@ def get_book_metadata(book_url: str) -> BookMetadata:
 def download_txt(url: str, file_name: str, folder: str = '.') -> [str]:
     """Функция для скачивания текстовых файлов.
     Args:
-        url (str): Cсылка на текст, который хочется скачать.
+        url (str): Ссылка на текст, который хочется скачать.
         file_name (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
     Returns:
@@ -160,7 +160,7 @@ def download_txt(url: str, file_name: str, folder: str = '.') -> [str]:
 def download_image(url: str, folder: str = '.') -> [str]:
     """Функция для скачивания картинок.
     Args:
-        url (str): Cсылка на картинку, которую хочется скачать.
+        url (str): Ссылка на картинку, которую хочется скачать.
         folder (str): Папка, куда сохранять.
     Returns:
         [str]: Путь до файла, куда сохранена картинка.
