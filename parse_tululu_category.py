@@ -11,7 +11,7 @@ from tululu_lib import SITE_HOST, MEDIA_EXISTS_STATUS_CODE, get_book_by_url, Tul
 
 FANTASTIC_CATEGORY_URL = urljoin(SITE_HOST, '/{category}')
 FANTASTIC_CATEGORY_CODE = 'l55/'
-MAX_PAGES_TO_PROCESS_IN_CATEGORY = 701
+MAX_PAGES_TO_PROCESS_IN_CATEGORY = 702
 DEFAULT_JSON_FILE_NAME = 'fantastic_lib.json'
 
 
@@ -54,7 +54,7 @@ def main():
     parser.add_argument(
         '--end_page',
         type=int,
-        default=MAX_PAGES_TO_PROCESS_IN_CATEGORY + 1,
+        default=MAX_PAGES_TO_PROCESS_IN_CATEGORY,
         help='Page in category to start parse books',
     )
     parser.add_argument(
