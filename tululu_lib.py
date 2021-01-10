@@ -16,7 +16,6 @@ FILENAME_PATTERN = re.compile(r'filename="(.+)"')
 BOOK_ID_PATTERN = re.compile(urljoin(SITE_HOST, r'b(\d+)'))
 BOOK_NAME_TEMPL = '{book_id}. {book_name}.txt'
 AUTHOR_BOOK_NAME_SEPARATOR = ' - '
-SKIPPED_DOWNLOAD_PLACEHOLDER = 'download was skipped'
 
 
 class BookMetadata(NamedTuple):
@@ -51,7 +50,7 @@ def get_book_by_url(book_url: str,
 
     book_metadata = get_book_metadata(book_url)
     book_id = BOOK_ID_PATTERN.search(book_url).group(1)
-    book_path = SKIPPED_DOWNLOAD_PLACEHOLDER
+    book_path = None
 
     if is_boot_txt_download:
         book_path = download_txt(
@@ -65,7 +64,7 @@ def get_book_by_url(book_url: str,
         if book_path is None:
             raise TululuException(f"There is no book required book path to download in {book_url}")
 
-    image_src = SKIPPED_DOWNLOAD_PLACEHOLDER
+    image_src = None
     if is_image_download:
         image_src = download_image(url=book_metadata.img_url)
 
