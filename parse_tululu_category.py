@@ -81,7 +81,7 @@ def main():
     )
 
     args = parser.parse_args()
-    books_properties_to_save = []
+
     books_urls = extract_href_from_category(
         category_code=FANTASTIC_CATEGORY_CODE,
         start_page=args.start_page,
@@ -91,6 +91,7 @@ def main():
         logging.error(f"There are no books in category {FANTASTIC_CATEGORY_CODE}. It's abnormal")
         return
 
+    books_properties_to_save = []
     for book_url in books_urls:
         try:
             book_properties = get_book_by_url(
@@ -106,7 +107,7 @@ def main():
 
     book_lib_json_path = args.json_path
     with book_lib_json_path.open(mode='w', encoding='utf-8') as f:
-        json.dump(list(books_properties_to_save), f, ensure_ascii=False, indent=2)
+        json.dump(books_properties_to_save, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == '__main__':
