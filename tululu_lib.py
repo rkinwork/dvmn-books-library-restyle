@@ -47,7 +47,6 @@ def get_book_by_url(book_url: str,
                     is_boot_txt_download: bool,
                     download_root: Path,
                     ) -> [dict]:
-
     book_metadata = get_book_metadata(book_url)
     book_id = BOOK_ID_PATTERN.search(book_url).group(1)
     book_path = None
@@ -111,9 +110,8 @@ def get_book_metadata(book_url: str) -> Optional[BookMetadata]:
         raise TululuRequiredTagAbsenceException(f"There is no tag with book name. {book_url}")
     author_and_title = book_image_tag['title']
     image_tag = book_image_tag.select_one('img')
-    if not image_tag or not image_tag['src']:
-        img_url = None
-    else:
+    img_url = None
+    if image_tag and image_tag['src']:
         img_url = urljoin(book_url, image_tag['src'])
 
     comments = extract_comments(soup)
@@ -142,21 +140,7 @@ def download_txt(url: str, file_name: str, folder: str = '.') -> [str]:
         [str]: Путь до файла, куда сохранён текст.
 
     """
-    with requests.get(url, stream=True, verify=False) as r:
-        if r.status_code != MEDIA_EXISTS_STATUS_CODE:
-            return None
-
-        if r.history:
-            return None
-
-        books_folder = Path(folder) / BOOKS_ROOT_NAME
-        books_folder.mkdir(parents=True, exist_ok=True)
-        txt_file = books_folder.joinpath(sanitize_filename(file_name))
-        with txt_file.open('wb') as file_descriptor:
-            for chunk in r.iter_content(chunk_size=1024):
-                file_descriptor.write(chunk)
-
-        return txt_file.as_posix()
+    return download_file(url, Path(folder) / BOOKS_ROOT_NAME, sanitize_filename(file_name))
 
 
 def download_image(url: str, folder: str = '.') -> [str]:
@@ -168,20 +152,19 @@ def download_image(url: str, folder: str = '.') -> [str]:
         [str]: Путь до файла, куда сохранена картинка.
 
     """
+    return download_file(url, Path(folder) / IMAGES_ROOT_NAME, sanitize_filename(url.split('/')[-1]))
+
+
+def download_file(url, folder, file_name):
     with requests.get(url, stream=True, verify=False) as r:
-        if r.status_code != MEDIA_EXISTS_STATUS_CODE:
+        if not r.ok or r.history:
             return None
 
-        if r.history:
-            return None
-
-        image_folder = Path(folder) / IMAGES_ROOT_NAME
-        image_folder.mkdir(parents=True, exist_ok=True)
-        image_file = image_folder.joinpath(
-            sanitize_filename(url.split('/')[-1]),
-        )
-        with image_file.open('wb') as file_descriptor:
+        folder = Path(folder)
+        folder.mkdir(parents=True, exist_ok=True)
+        file_to_save = folder.joinpath(file_name)
+        with file_to_save.open('wb') as file_descriptor:
             for chunk in r.iter_content(chunk_size=1024):
                 file_descriptor.write(chunk)
 
-        return image_file.as_posix()
+        return file_to_save.as_posix()
