@@ -31,7 +31,7 @@ class TululuException(Exception):
     pass
 
 
-class TululuRequiredTagAbsenceException(Exception):
+class TululuRequiredTagAbsenceException(TululuException):
     pass
 
 
@@ -48,13 +48,8 @@ def get_book_by_url(book_url: str,
                     is_boot_txt_download: bool,
                     download_root: Path,
                     ) -> [dict]:
-    try:
-        book_metadata = get_book_metadata(book_url)
-    except requests.HTTPError:
-        raise TululuException(f"There is no page {book_url}")
-    except TululuRequiredTagAbsenceException as e:
-        raise TululuException(f"There is no required information: {e}")
 
+    book_metadata = get_book_metadata(book_url)
     book_id = BOOK_ID_PATTERN.search(book_url).group(1)
     book_path = SKIPPED_DOWNLOAD_PLACEHOLDER
 
@@ -108,7 +103,8 @@ def get_book_metadata(book_url: str) -> Optional[BookMetadata]:
 
     """
     with requests.get(book_url, verify=False) as req:
-        req.raise_for_status()
+        if not req.ok:
+            raise TululuException(f"There is no page {book_url}")
         response_text = req.text
     soup = BeautifulSoup(response_text, 'lxml')
     book_image_tag = soup.select_one('.bookimage a')
