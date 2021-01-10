@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 from typing import NamedTuple, Tuple, Optional
 from urllib.parse import urljoin
-import logging
 
 import requests
 from bs4 import BeautifulSoup

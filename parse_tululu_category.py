@@ -2,7 +2,6 @@ import argparse
 import json
 import pathlib
 from urllib.parse import urljoin
-import sys
 import logging
 
 import requests
