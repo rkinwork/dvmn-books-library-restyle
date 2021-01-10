@@ -89,6 +89,8 @@ def main():
     )
     if books_urls is None:
         logging.error(f"There are no books in category {FANTASTIC_CATEGORY_CODE}. It's abnormal")
+        return
+
     for book_url in books_urls:
         try:
             book_properties = get_book_by_url(
