@@ -1,7 +1,8 @@
-from typing import TextIO, Tuple, Optional
+from typing import TextIO, Tuple
 import json
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from livereload import Server
 
 
 class BookItemException(Exception):
@@ -68,12 +69,19 @@ def get_book_items() -> list:
         return list(BookItems(f)())
 
 
-def main():
+def on_reload():
     template = init_template()
     book_items = get_book_items()
     rendered_page = template.render(book_items=book_items)
     with open('index.html', 'w') as f:
         f.write(rendered_page)
+
+
+def main():
+    server = Server()
+    on_reload()
+    server.watch('templates/*.html', on_reload)
+    server.serve()
 
 
 if __name__ == '__main__':
