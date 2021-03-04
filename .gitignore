@@ -103,6 +103,7 @@ ENV/
 # project
 books/
 images/
+pages/
 fantastic_lib.json
 setup.cfg
 index.html

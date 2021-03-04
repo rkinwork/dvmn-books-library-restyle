@@ -1,8 +1,14 @@
 from typing import TextIO, Tuple
 import json
+from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
+import more_itertools
+
+PAGES = Path('pages')
+PAGES_TEMPLATE = "index{}.html"
+PAGE_CHUNK = 6
 
 
 class BookItemException(Exception):
@@ -74,18 +80,20 @@ def get_book_items() -> list:
 
 
 def on_reload():
+    PAGES.mkdir(parents=True, exist_ok=True)
     template = init_template()
     book_items = get_book_items()
-    rendered_page = template.render(book_items=book_items)
-    with open('index.html', 'w') as f:
-        f.write(rendered_page)
+    for num, book_chunk in enumerate(more_itertools.chunked(book_items, PAGE_CHUNK), 1):
+        num = num if num != 1 else ''
+        rendered_page = template.render(book_items=book_chunk)
+        Path(PAGES, PAGES_TEMPLATE.format(num)).write_text(rendered_page)
 
 
 def main():
     server = Server()
     on_reload()
     server.watch('templates/*.html', on_reload)
-    server.serve()
+    server.serve(root=PAGES)
 
 
 if __name__ == '__main__':
