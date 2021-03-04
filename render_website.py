@@ -40,6 +40,10 @@ class BookItem:
     def alt(self):
         return f"{self.title} - {self.author}"
 
+    @property
+    def book_url(self):
+        return f"/{self.book_path}"
+
 
 class BookItems:
     def __init__(self, json_fp: TextIO):
