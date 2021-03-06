@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
     <div class="container">
+        <div class="mt-1">
+            {% include "paginator.html" %}
+        </div>
         <div class="row">
             {% for book_row in book_items|batch(2) %}
                 {% for book in book_row %}

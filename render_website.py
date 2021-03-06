@@ -1,6 +1,7 @@
 from typing import TextIO, Tuple
 import json
 from pathlib import Path
+import math
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
@@ -83,9 +84,14 @@ def on_reload():
     PAGES.mkdir(parents=True, exist_ok=True)
     template = init_template()
     book_items = get_book_items()
+    total_pages = math.ceil(len(book_items)/PAGE_CHUNK)
     for num, book_chunk in enumerate(more_itertools.chunked(book_items, PAGE_CHUNK), 1):
-        num = num if num != 1 else ''
-        rendered_page = template.render(book_items=book_chunk)
+        rendered_page = template.render(book_items=book_chunk,
+                                        paginator_format='/index{}.html',
+                                        paginator_total_pages=total_pages,
+                                        current_page=num,
+                                        )
+
         Path(PAGES, PAGES_TEMPLATE.format(num)).write_text(rendered_page)
 
 
