@@ -2,6 +2,7 @@ from typing import TextIO, Tuple
 import json
 from pathlib import Path
 import math
+from distutils.dir_util import copy_tree, remove_tree
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
@@ -10,6 +11,9 @@ import more_itertools
 PAGES = Path('pages')
 PAGES_TEMPLATE = "index{}.html"
 PAGE_CHUNK = 6
+STATIC_PATH = Path('static')
+MEDIA_BOOKS_PATH = Path('books')
+MEDIA_IMAGES_PATH = Path('images')
 
 
 class BookItemException(Exception):
@@ -81,10 +85,15 @@ def get_book_items() -> list:
 
 
 def on_reload():
-    PAGES.mkdir(parents=True, exist_ok=True)
+    remove_tree(PAGES)
+    copy_tree(STATIC_PATH.as_posix(), (PAGES/'static').as_posix())
+    copy_tree(MEDIA_BOOKS_PATH.as_posix(), (PAGES/'books').as_posix())
+    copy_tree(MEDIA_IMAGES_PATH.as_posix(), (PAGES/'images').as_posix())
+
     template = init_template()
     book_items = get_book_items()
-    total_pages = math.ceil(len(book_items)/PAGE_CHUNK)
+    total_pages = math.ceil(len(book_items) / PAGE_CHUNK)
+
     for num, book_chunk in enumerate(more_itertools.chunked(book_items, PAGE_CHUNK), 1):
         rendered_page = template.render(book_items=book_chunk,
                                         paginator_format='/index{}.html',
