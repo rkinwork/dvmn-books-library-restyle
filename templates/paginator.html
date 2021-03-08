@@ -4,8 +4,8 @@
             {%- if loop.first -%}
                 <li class="page-item {{ "disabled" if current_page == 1 }}">
                     <a class="page-link"
-                            {%- if i != 1 -%}
-                       href="{{ paginator_format.format(i - 1) | urlencode }}"
+                            {%- if current_page != 1 -%}
+                       href="{{ paginator_format.format(current_page - 1) | urlencode }}"
                             {%- else -%}
                        href="#" tabindex="-1" aria-disabled="true"
                             {%- endif -%}
@@ -18,8 +18,8 @@
             </li>
             {%- if loop.last -%}
                 <li class="page-item {{ "disabled" if current_page == paginator_total_pages }}">
-                    <a class="page-link" {%- if i != paginator_total_pages -%}
-                       href="{{ paginator_format.format(i + 1) | urlencode }}"
+                    <a class="page-link" {%- if current_page != paginator_total_pages -%}
+                       href="{{ paginator_format.format(current_page + 1) | urlencode }}"
                     {%- else -%}
                        href="#" tabindex="-1" aria-disabled="true"
                     {%- endif -%}
