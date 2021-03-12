@@ -5,7 +5,7 @@
                 <li class="page-item {{ "disabled" if current_page == 1 }}">
                     <a class="page-link"
                             {%- if current_page != 1 -%}
-                       href="{{ paginator_format.format(current_page - 1) | urlencode }}"
+                       href="{{ pages_names[current_page - 2] | urlencode }}"
                             {%- else -%}
                        href="#" tabindex="-1" aria-disabled="true"
                             {%- endif -%}
@@ -14,12 +14,12 @@
             {% endif %}
             <li class="page-item {{ "active" if i == current_page }}">
                 <a class="page-link"
-                   href="{{ paginator_format.format(i) | urlencode }}">{{ i }}</a>
+                   href="{{ pages_names[i - 1] | urlencode }}">{{ i }}</a>
             </li>
             {%- if loop.last -%}
                 <li class="page-item {{ "disabled" if current_page == paginator_total_pages }}">
                     <a class="page-link" {%- if current_page != paginator_total_pages -%}
-                       href="{{ paginator_format.format(current_page + 1) | urlencode }}"
+                       href="{{ pages_names[current_page] | urlencode }}"
                     {%- else -%}
                        href="#" tabindex="-1" aria-disabled="true"
                     {%- endif -%}
