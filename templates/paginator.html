@@ -4,11 +4,11 @@
             {%- if loop.first -%}
                 <li class="page-item {{ "disabled" if current_page == 1 }}">
                     <a class="page-link"
-                            {%- if current_page != 1 -%}
+                            {% if current_page != 1 -%}
                        href="{{ pages_names[current_page - 2] | urlencode }}"
-                            {%- else -%}
+                            {% else -%}
                        href="#" tabindex="-1" aria-disabled="true"
-                            {%- endif -%}
+                            {% endif -%}
                     >Назад</a>
                 </li>
             {% endif %}
@@ -18,11 +18,12 @@
             </li>
             {%- if loop.last -%}
                 <li class="page-item {{ "disabled" if current_page == paginator_total_pages }}">
-                    <a class="page-link" {%- if current_page != paginator_total_pages -%}
+                    <a class="page-link"
+                            {% if current_page != paginator_total_pages -%}
                        href="{{ pages_names[current_page] | urlencode }}"
-                    {%- else -%}
+                            {% else -%}
                        href="#" tabindex="-1" aria-disabled="true"
-                    {%- endif -%}
+                            {% endif -%}
                     >Вперед</a>
                 </li>
             {% endif %}

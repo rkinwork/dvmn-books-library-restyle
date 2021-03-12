@@ -54,6 +54,8 @@ python3 render_website.py
 
 И переходите по адресу http://127.0.0.1:5500
 
+Готовый пример вы можете посмотреть [https://rkinwork.github.io/dvmn-books-library-restyle/](https://rkinwork.github.io/dvmn-books-library-restyle/)
+
 
 ### Цель проекта
 
