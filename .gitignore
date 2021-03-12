@@ -101,9 +101,7 @@ ENV/
 .idea/
 
 # project
-books/
-images/
-pages/
+/books/
+/images/
 fantastic_lib.json
 setup.cfg
-index.html

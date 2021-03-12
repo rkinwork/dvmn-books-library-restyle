@@ -8,7 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from livereload import Server
 import more_itertools
 
-PAGES = Path('pages')
+PAGES = Path('docs')
 PAGES_TEMPLATE = "index{}.html"
 PAGE_CHUNK = 6
 STATIC_PATH = Path('static')
@@ -86,7 +86,8 @@ def get_book_items() -> list:
 
 
 def on_reload():
-    remove_tree(PAGES)
+    if PAGES.exists():
+        remove_tree(PAGES)
     copy_tree(STATIC_PATH.as_posix(), (PAGES/'static').as_posix())
     copy_tree(MEDIA_BOOKS_PATH.as_posix(), (PAGES/'books').as_posix())
     copy_tree(MEDIA_IMAGES_PATH.as_posix(), (PAGES/'images').as_posix())
